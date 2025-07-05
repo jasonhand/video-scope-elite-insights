@@ -77,7 +77,9 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addVideos = async (urls: string[]) => {
-    if (!apiKey) return;
+    if (!apiKey) {
+      throw new Error('API key is required to add videos');
+    }
 
     setIsLoading(true);
     setError(null);
@@ -85,9 +87,24 @@ export const YouTubeProvider = ({ children }: { children: ReactNode }) => {
     try {
       const service = new YouTubeApiService(apiKey);
       const newVideos = await service.fetchVideosByUrls(urls);
-      setVideos(prev => [...prev, ...newVideos]);
+      
+      // Check for duplicates and only add new videos
+      setVideos(prev => {
+        const existingIds = new Set(prev.map(v => v.id));
+        const uniqueNewVideos = newVideos.filter(video => !existingIds.has(video.id));
+        
+        if (uniqueNewVideos.length === 0) {
+          throw new Error('Video already exists in your collection');
+        }
+        
+        return [...prev, ...uniqueNewVideos];
+      });
+      
+      return newVideos;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add videos');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add videos';
+      setError(errorMessage);
+      throw err; // Re-throw so the calling component can handle it
     } finally {
       setIsLoading(false);
     }

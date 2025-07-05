@@ -74,12 +74,14 @@ const SettingsDialog = ({ children }: SettingsDialogProps) => {
     setAddVideoSuccess('');
 
     try {
-      await addVideos([newVideoUrl.trim()]);
+      const addedVideos = await addVideos([newVideoUrl.trim()]);
       setNewVideoUrl('');
-      setAddVideoSuccess('Video added successfully!');
+      setAddVideoSuccess(`Video "${addedVideos[0]?.title || 'Unknown'}" added successfully!`);
       setTimeout(() => setAddVideoSuccess(''), 3000);
     } catch (error) {
-      setAddVideoError(error instanceof Error ? error.message : 'Failed to add video');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add video';
+      setAddVideoError(errorMessage);
+      console.error('Error adding video:', error);
     } finally {
       setIsAddingVideo(false);
     }
