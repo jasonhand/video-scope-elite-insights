@@ -23,7 +23,11 @@ import {
   Download, 
   Eye,
   Save,
-  X
+  X,
+  Plus,
+  Trash2,
+  ExternalLink,
+  AlertCircle
 } from 'lucide-react';
 import { useYouTube } from '@/contexts/YouTubeContext';
 
@@ -32,12 +36,16 @@ interface SettingsDialogProps {
 }
 
 const SettingsDialog = ({ children }: SettingsDialogProps) => {
-  const { apiKey, setApiKey, videos, removeVideo } = useYouTube();
+  const { apiKey, setApiKey, videos, removeVideo, addVideos } = useYouTube();
   const [newApiKey, setNewApiKey] = useState(apiKey || '');
   const [refreshInterval, setRefreshInterval] = useState('5');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [theme, setTheme] = useState('light');
   const [exportFormat, setExportFormat] = useState('json');
+  const [newVideoUrl, setNewVideoUrl] = useState('');
+  const [isAddingVideo, setIsAddingVideo] = useState(false);
+  const [addVideoError, setAddVideoError] = useState('');
+  const [addVideoSuccess, setAddVideoSuccess] = useState('');
 
   const handleSaveApiKey = () => {
     if (newApiKey.trim()) {
@@ -48,6 +56,37 @@ const SettingsDialog = ({ children }: SettingsDialogProps) => {
   const handleClearApiKey = () => {
     localStorage.removeItem('youtube_api_key');
     setNewApiKey('');
+  };
+
+  const handleAddVideo = async () => {
+    if (!newVideoUrl.trim()) {
+      setAddVideoError('Please enter a YouTube URL');
+      return;
+    }
+
+    if (!apiKey) {
+      setAddVideoError('Please configure your YouTube API key first');
+      return;
+    }
+
+    setIsAddingVideo(true);
+    setAddVideoError('');
+    setAddVideoSuccess('');
+
+    try {
+      await addVideos([newVideoUrl.trim()]);
+      setNewVideoUrl('');
+      setAddVideoSuccess('Video added successfully!');
+      setTimeout(() => setAddVideoSuccess(''), 3000);
+    } catch (error) {
+      setAddVideoError(error instanceof Error ? error.message : 'Failed to add video');
+    } finally {
+      setIsAddingVideo(false);
+    }
+  };
+
+  const handleRemoveVideo = (videoId: string) => {
+    removeVideo(videoId);
   };
 
   const exportData = (format: string) => {
@@ -182,9 +221,70 @@ const SettingsDialog = ({ children }: SettingsDialogProps) => {
           </TabsContent>
 
           <TabsContent value="videos" className="space-y-6">
+            {/* Add New Video */}
             <Card>
               <CardHeader>
-                <CardTitle>Video Management</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Add New Video
+                </CardTitle>
+                <CardDescription>
+                  Add a YouTube video to your analytics collection by providing its URL.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="video-url">YouTube Video URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="video-url"
+                      type="url"
+                      value={newVideoUrl}
+                      onChange={(e) => setNewVideoUrl(e.target.value)}
+                      placeholder="https://youtu.be/VIDEO_ID"
+                      disabled={isAddingVideo}
+                    />
+                    <Button 
+                      onClick={handleAddVideo}
+                      disabled={isAddingVideo || !newVideoUrl.trim()}
+                      size="sm"
+                    >
+                      {isAddingVideo ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      ) : (
+                        <Plus className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Supports YouTube URLs in formats: youtu.be/VIDEO_ID, youtube.com/watch?v=VIDEO_ID
+                  </p>
+                </div>
+
+                {/* Error/Success Messages */}
+                {addVideoError && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <span className="text-sm text-red-700">{addVideoError}</span>
+                  </div>
+                )}
+
+                {addVideoSuccess && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="h-4 w-4 bg-green-600 rounded-full"></div>
+                    <span className="text-sm text-green-700">{addVideoSuccess}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Manage Existing Videos */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Play className="h-5 w-5" />
+                  Manage Videos
+                </CardTitle>
                 <CardDescription>
                   View and manage the videos currently being analyzed.
                 </CardDescription>
@@ -198,29 +298,70 @@ const SettingsDialog = ({ children }: SettingsDialogProps) => {
                   
                   <Separator />
                   
-                  <div className="max-h-60 overflow-y-auto space-y-2">
-                    {videos.map((video) => (
-                      <div key={video.id} className="flex items-center justify-between p-2 border rounded-lg">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{video.title}</p>
-                          <p className="text-xs text-gray-500">{video.channelTitle}</p>
+                  {videos.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Play className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No videos added yet</p>
+                      <p className="text-sm text-gray-400 mt-1">Add your first video using the form above</p>
+                    </div>
+                  ) : (
+                    <div className="max-h-60 overflow-y-auto space-y-2">
+                      {videos.map((video) => (
+                        <div key={video.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                            {/* Video Thumbnail */}
+                            <div className="flex-shrink-0">
+                              <img 
+                                src={video.thumbnail} 
+                                alt={video.title}
+                                className="w-12 h-8 object-cover rounded"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+
+                            {/* Video Info */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{video.title}</p>
+                              <p className="text-xs text-gray-500">{video.channelTitle}</p>
+                            </div>
+                          </div>
+
+                          {/* Metrics and Actions */}
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <Badge variant="outline" className="text-xs">
+                                {parseInt(video.stats.viewCount || '0').toLocaleString()} views
+                              </Badge>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.open(video.url, '_blank')}
+                                className="text-blue-600 hover:text-blue-700"
+                                title="Watch video"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveVideo(video.id)}
+                                className="text-red-600 hover:text-red-700"
+                                title="Remove video"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {parseInt(video.stats.viewCount || '0').toLocaleString()} views
-                          </Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeVideo(video.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
