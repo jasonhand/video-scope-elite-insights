@@ -3,21 +3,25 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play, TrendingUp, Users, Eye, ThumbsUp, MessageCircle, Share2, BarChart, Settings, Upload } from 'lucide-react';
+import { Play, TrendingUp, ThumbsUp, BarChart, Settings, RefreshCw } from 'lucide-react';
 import MetricsOverview from '@/components/dashboard/MetricsOverview';
 import PerformanceChart from '@/components/dashboard/PerformanceChart';
 import VideoGrid from '@/components/dashboard/VideoGrid';
 import EngagementRings from '@/components/dashboard/EngagementRings';
 import ApiSetup from '@/components/setup/ApiSetup';
+import { YouTubeProvider, useYouTube } from '@/contexts/YouTubeContext';
 
-const Index = () => {
-  const [apiConnected, setApiConnected] = useState(false);
+const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const { apiKey, refreshData, isLoading } = useYouTube();
 
-  if (!apiConnected) {
-    return <ApiSetup onConnect={() => setApiConnected(true)} />;
+  const handleRefresh = () => {
+    refreshData();
+  };
+
+  if (!apiKey) {
+    return <ApiSetup onConnect={() => {}} />;
   }
 
   return (
@@ -42,6 +46,14 @@ const Index = () => {
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
                 API Connected
               </Badge>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4" />
               </Button>
@@ -128,6 +140,14 @@ const Index = () => {
         </Tabs>
       </main>
     </div>
+  );
+};
+
+const Index = () => {
+  return (
+    <YouTubeProvider>
+      <Dashboard />
+    </YouTubeProvider>
   );
 };
 

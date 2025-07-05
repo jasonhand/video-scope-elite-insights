@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Play, Key, CheckCircle, AlertCircle } from 'lucide-react';
+import { YouTubeApiService } from '@/services/youtubeApi';
+import { useYouTube } from '@/contexts/YouTubeContext';
 
 interface ApiSetupProps {
   onConnect: () => void;
@@ -15,20 +17,36 @@ const ApiSetup = ({ onConnect }: ApiSetupProps) => {
   const [apiKey, setApiKey] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [validationStatus, setValidationStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+  const { setApiKey: setContextApiKey } = useYouTube();
 
   const handleValidateApi = async () => {
     if (!apiKey.trim()) return;
     
     setIsValidating(true);
+    setValidationStatus('idle');
+    setErrorMessage('');
     
-    // Simulate API validation
-    setTimeout(() => {
-      setValidationStatus('success');
+    try {
+      const service = new YouTubeApiService(apiKey.trim());
+      const isValid = await service.validateApiKey();
+      
+      if (isValid) {
+        setValidationStatus('success');
+        setContextApiKey(apiKey.trim());
+        setTimeout(() => {
+          onConnect();
+        }, 1500);
+      } else {
+        setValidationStatus('error');
+        setErrorMessage('Invalid API key. Please check your key and try again.');
+      }
+    } catch (error) {
+      setValidationStatus('error');
+      setErrorMessage('Failed to validate API key. Please check your internet connection and try again.');
+    } finally {
       setIsValidating(false);
-      setTimeout(() => {
-        onConnect();
-      }, 1500);
-    }, 2000);
+    }
   };
 
   return (
@@ -115,7 +133,7 @@ const ApiSetup = ({ onConnect }: ApiSetupProps) => {
               {validationStatus === 'error' && (
                 <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
                   <AlertCircle className="h-5 w-5" />
-                  <span className="font-medium">Invalid API key. Please check and try again.</span>
+                  <span className="font-medium">{errorMessage}</span>
                 </div>
               )}
 
