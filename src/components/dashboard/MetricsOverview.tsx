@@ -7,6 +7,48 @@ import { useYouTube } from '@/contexts/YouTubeContext';
 const MetricsOverview = () => {
   const { videos, isLoading } = useYouTube();
 
+  // Calculate real trends by comparing newest vs oldest videos (by publish date)
+  const calculateRealTrends = () => {
+    if (videos.length < 2) {
+      return {
+        viewsTrend: 0,
+        likesTrend: 0,
+        engagementTrend: 0,
+        commentsTrend: 0,
+      };
+    }
+
+    // Sort videos by publish date
+    const sortedVideos = [...videos].sort((a, b) => 
+      new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()
+    );
+
+    const oldestHalf = sortedVideos.slice(0, Math.floor(sortedVideos.length / 2));
+    const newestHalf = sortedVideos.slice(Math.floor(sortedVideos.length / 2));
+
+    const calcAverage = (videoList: typeof videos, metric: string) => {
+      const sum = videoList.reduce((acc, video) => acc + parseInt(video.stats[metric as keyof typeof video.stats] || '0'), 0);
+      return sum / videoList.length;
+    };
+
+    const oldViewsAvg = calcAverage(oldestHalf, 'viewCount');
+    const newViewsAvg = calcAverage(newestHalf, 'viewCount');
+    const oldLikesAvg = calcAverage(oldestHalf, 'likeCount');
+    const newLikesAvg = calcAverage(newestHalf, 'likeCount');
+    const oldCommentsAvg = calcAverage(oldestHalf, 'commentCount');
+    const newCommentsAvg = calcAverage(newestHalf, 'commentCount');
+
+    const oldEngagementAvg = oldViewsAvg > 0 ? ((oldLikesAvg + oldCommentsAvg) / oldViewsAvg * 100) : 0;
+    const newEngagementAvg = newViewsAvg > 0 ? ((newLikesAvg + newCommentsAvg) / newViewsAvg * 100) : 0;
+
+    return {
+      viewsTrend: oldViewsAvg > 0 ? ((newViewsAvg - oldViewsAvg) / oldViewsAvg * 100) : 0,
+      likesTrend: oldLikesAvg > 0 ? ((newLikesAvg - oldLikesAvg) / oldLikesAvg * 100) : 0,
+      engagementTrend: oldEngagementAvg > 0 ? ((newEngagementAvg - oldEngagementAvg) / oldEngagementAvg * 100) : 0,
+      commentsTrend: oldCommentsAvg > 0 ? ((newCommentsAvg - oldCommentsAvg) / oldCommentsAvg * 100) : 0,
+    };
+  };
+
   // Calculate aggregated metrics from real video data
   const calculateMetrics = () => {
     if (videos.length === 0) {
@@ -40,13 +82,14 @@ const MetricsOverview = () => {
   };
 
   const metrics = calculateMetrics();
+  const trends = calculateRealTrends();
 
   const metricsConfig = [
     {
       title: 'Total Views',
       value: isLoading ? '...' : metrics.totalViews,
-      change: '+12.5%', // These would be calculated from historical data
-      trend: 'up',
+      change: `${trends.viewsTrend >= 0 ? '+' : ''}${trends.viewsTrend.toFixed(1)}%`,
+      trend: trends.viewsTrend >= 0 ? 'up' : 'down',
       icon: Eye,
       description: 'Across all videos',
       color: 'text-blue-600',
@@ -55,8 +98,8 @@ const MetricsOverview = () => {
     {
       title: 'Total Likes',
       value: isLoading ? '...' : metrics.totalLikes,
-      change: '+8.2%',
-      trend: 'up',
+      change: `${trends.likesTrend >= 0 ? '+' : ''}${trends.likesTrend.toFixed(1)}%`,
+      trend: trends.likesTrend >= 0 ? 'up' : 'down',
       icon: ThumbsUp,
       description: 'All-time likes',
       color: 'text-purple-600',
@@ -65,8 +108,8 @@ const MetricsOverview = () => {
     {
       title: 'Engagement Rate',
       value: isLoading ? '...' : `${metrics.avgEngagement}%`,
-      change: '-0.3%',
-      trend: 'down',
+      change: `${trends.engagementTrend >= 0 ? '+' : ''}${trends.engagementTrend.toFixed(1)}%`,
+      trend: trends.engagementTrend >= 0 ? 'up' : 'down',
       icon: Users,
       description: 'Avg. per video',
       color: 'text-indigo-600',
@@ -75,8 +118,8 @@ const MetricsOverview = () => {
     {
       title: 'Comments',
       value: isLoading ? '...' : metrics.totalComments,
-      change: '+15.7%',
-      trend: 'up',
+      change: `${trends.commentsTrend >= 0 ? '+' : ''}${trends.commentsTrend.toFixed(1)}%`,
+      trend: trends.commentsTrend >= 0 ? 'up' : 'down',
       icon: MessageCircle,
       description: 'Total comments',
       color: 'text-teal-600',

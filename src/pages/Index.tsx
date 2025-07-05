@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,10 @@ import VideoGrid from '@/components/dashboard/VideoGrid';
 import EngagementRings from '@/components/dashboard/EngagementRings';
 import ApiSetup from '@/components/setup/ApiSetup';
 import { YouTubeProvider, useYouTube } from '@/contexts/YouTubeContext';
+import PerformanceTab from '@/components/dashboard/PerformanceTab';
+import EngagementTab from '@/components/dashboard/EngagementTab';
+import InsightsTab from '@/components/dashboard/InsightsTab';
+import RawDataTab from '@/components/dashboard/RawDataTab';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -65,11 +68,12 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[400px] bg-white/60 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-5 lg:w-[500px] bg-white/60 backdrop-blur-sm">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="engagement">Engagement</TabsTrigger>
             <TabsTrigger value="insights">Insights</TabsTrigger>
+            <TabsTrigger value="data">Raw Data</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
@@ -82,60 +86,19 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-8">
-            <Card className="bg-white/60 backdrop-blur-sm border-white/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-blue-600" />
-                  <span>Performance Analytics</span>
-                </CardTitle>
-                <CardDescription>
-                  Deep dive into your video performance metrics and trends
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  Advanced performance analytics coming soon...
-                </div>
-              </CardContent>
-            </Card>
+            <PerformanceTab />
           </TabsContent>
 
           <TabsContent value="engagement" className="space-y-8">
-            <Card className="bg-white/60 backdrop-blur-sm border-white/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <ThumbsUp className="h-5 w-5 text-purple-600" />
-                  <span>Engagement Analysis</span>
-                </CardTitle>
-                <CardDescription>
-                  Understand how your audience interacts with your content
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  Engagement analysis tools coming soon...
-                </div>
-              </CardContent>
-            </Card>
+            <EngagementTab />
           </TabsContent>
 
           <TabsContent value="insights" className="space-y-8">
-            <Card className="bg-white/60 backdrop-blur-sm border-white/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart className="h-5 w-5 text-indigo-600" />
-                  <span>AI-Powered Insights</span>
-                </CardTitle>
-                <CardDescription>
-                  Actionable recommendations to improve your video strategy
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12 text-gray-500">
-                  AI insights engine coming soon...
-                </div>
-              </CardContent>
-            </Card>
+            <InsightsTab />
+          </TabsContent>
+
+          <TabsContent value="data" className="space-y-8">
+            <RawDataTab />
           </TabsContent>
         </Tabs>
       </main>
