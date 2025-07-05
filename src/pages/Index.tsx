@@ -9,6 +9,7 @@ import PerformanceChart from '@/components/dashboard/PerformanceChart';
 import VideoGrid from '@/components/dashboard/VideoGrid';
 import EngagementRings from '@/components/dashboard/EngagementRings';
 import ApiSetup from '@/components/setup/ApiSetup';
+import SettingsDialog from '@/components/setup/SettingsDialog';
 import { YouTubeProvider, useYouTube } from '@/contexts/YouTubeContext';
 import PerformanceTab from '@/components/dashboard/PerformanceTab';
 import EngagementTab from '@/components/dashboard/EngagementTab';
@@ -57,9 +58,11 @@ const Dashboard = () => {
               >
                 <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
-              </Button>
+              <SettingsDialog>
+                <Button variant="ghost" size="sm">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </SettingsDialog>
             </div>
           </div>
         </div>
