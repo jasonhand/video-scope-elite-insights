@@ -1,57 +1,64 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Calendar } from 'lucide-react';
+import { TrendingUp, Calendar, Trophy, Eye, ThumbsUp, MessageCircle } from 'lucide-react';
 import { useYouTube } from '@/contexts/YouTubeContext';
 
 const PerformanceChart = () => {
   const { videos, isLoading } = useYouTube();
 
-  // Transform real video data into chart format
-  const createChartData = () => {
+  // Get top 10 videos by views
+  const getTopPerformers = () => {
     if (videos.length === 0) return [];
 
-    // Sort videos by publish date and create a timeline
-    const sortedVideos = [...videos].sort((a, b) => 
-      new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()
-    );
-
-    return sortedVideos.map((video, index) => {
-      const views = parseInt(video.stats.viewCount || '0');
-      const likes = parseInt(video.stats.likeCount || '0');
-      const comments = parseInt(video.stats.commentCount || '0');
-      const engagement = views > 0 ? ((likes + comments) / views * 100) : 0;
-      
-      const publishDate = new Date(video.publishedAt);
-      const dayName = publishDate.toLocaleDateString('en-US', { weekday: 'short' });
-      
-      return {
-        day: `${dayName} ${publishDate.getDate()}`,
-        views: views,
-        engagement: engagement,
-        title: video.title.substring(0, 30) + (video.title.length > 30 ? '...' : ''),
-      };
-    });
+    return [...videos]
+      .sort((a, b) => parseInt(b.stats.viewCount || '0') - parseInt(a.stats.viewCount || '0'))
+      .slice(0, 10)
+      .map((video, index) => {
+        const views = parseInt(video.stats.viewCount || '0');
+        const likes = parseInt(video.stats.likeCount || '0');
+        const comments = parseInt(video.stats.commentCount || '0');
+        const engagement = views > 0 ? ((likes + comments) / views * 100) : 0;
+        
+        return {
+          rank: index + 1,
+          title: video.title,
+          channel: video.channelTitle,
+          views,
+          likes,
+          comments,
+          engagement,
+          url: video.url,
+          thumbnail: video.thumbnail,
+        };
+      });
   };
 
-  const chartData = createChartData();
-  const maxViews = chartData.length > 0 ? Math.max(...chartData.map(d => d.views)) : 1;
+  const topPerformers = getTopPerformers();
+  const maxViews = topPerformers.length > 0 ? Math.max(...topPerformers.map(v => v.views)) : 1;
 
-  // Calculate summary stats
-  const totalViews = chartData.reduce((sum, d) => sum + d.views, 0);
-  const avgEngagement = chartData.length > 0 
-    ? chartData.reduce((sum, d) => sum + d.engagement, 0) / chartData.length 
-    : 0;
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toLocaleString();
+  };
+
+  const daysSincePublished = (publishedAt: string) => {
+    const publishDate = new Date(publishedAt);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - publishDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
   if (isLoading) {
     return (
       <Card className="bg-white/60 backdrop-blur-sm border-white/20">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <span>Performance Trajectory</span>
+            <Trophy className="h-5 w-5 text-blue-600" />
+            <span>Top Performers</span>
           </CardTitle>
-          <CardDescription>Loading video performance data...</CardDescription>
+          <CardDescription>Loading top performing videos...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-48 flex items-center justify-center">
@@ -68,76 +75,98 @@ const PerformanceChart = () => {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
-              <span>Performance Trajectory</span>
+              <Trophy className="h-5 w-5 text-blue-600" />
+              <span>Top Performers</span>
             </CardTitle>
-            <CardDescription>Video performance by publish date</CardDescription>
+            <CardDescription>Top 10 videos by view count</CardDescription>
           </div>
           <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-            <Calendar className="h-3 w-3 mr-1" />
-            {videos.length} Videos
+            <Eye className="h-3 w-3 mr-1" />
+            {topPerformers.length} Videos
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {/* Chart Area */}
-          <div className="h-48 flex items-end justify-between space-x-2 bg-gradient-to-t from-blue-50 to-transparent p-4 rounded-lg">
-            {chartData.map((data, index) => (
-              <div key={index} className="flex flex-col items-center space-y-2 flex-1">
-                <div className="w-full flex flex-col items-center">
-                  {/* Views Bar */}
-                  <div 
-                    className="w-full bg-gradient-to-t from-blue-500 to-blue-300 rounded-t-sm hover:from-blue-600 hover:to-blue-400 transition-all duration-300 cursor-pointer group relative"
-                    style={{ height: `${(data.views / maxViews) * 120}px`, minHeight: '8px' }}
-                    title={`${data.title}: ${data.views.toLocaleString()} views`}
-                  >
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
-                      {data.title}
-                      <br />
-                      {data.views.toLocaleString()} views
-                      <br />
-                      {data.engagement.toFixed(1)}% engagement
-                    </div>
+          {/* Top Performers List */}
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {topPerformers.map((video, index) => (
+              <div 
+                key={video.rank} 
+                className="flex items-center space-x-3 p-3 bg-white/40 rounded-lg hover:bg-white/60 transition-all duration-300 cursor-pointer group"
+                onClick={() => window.open(video.url, '_blank')}
+              >
+                {/* Rank */}
+                <div className="flex-shrink-0">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                    index === 1 ? 'bg-gray-100 text-gray-700' :
+                    index === 2 ? 'bg-orange-100 text-orange-700' :
+                    'bg-blue-100 text-blue-700'
+                  }`}>
+                    {video.rank}
                   </div>
-                  {/* Engagement Indicator */}
-                  <div 
-                    className="w-2 h-2 bg-purple-500 rounded-full mt-1"
-                    style={{ opacity: Math.min(data.engagement / 10, 1) }}
-                    title={`${data.engagement.toFixed(1)}% engagement`}
+                </div>
+
+                {/* Thumbnail */}
+                <div className="flex-shrink-0">
+                  <img 
+                    src={video.thumbnail} 
+                    alt={video.title}
+                    className="w-12 h-8 object-cover rounded"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
                   />
                 </div>
-                <span className="text-xs font-medium text-gray-600 text-center">{data.day}</span>
+
+                {/* Video Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                    {video.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">{video.channel}</p>
+                </div>
+
+                {/* Metrics */}
+                <div className="flex-shrink-0 text-right">
+                  <div className="text-lg font-bold text-gray-900">
+                    {formatNumber(video.views)}
+                  </div>
+                  <div className="text-xs text-gray-500">views</div>
+                </div>
+
+                {/* Engagement */}
+                <div className="flex-shrink-0 text-right">
+                  <div className="text-sm font-medium text-purple-600">
+                    {video.engagement.toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-gray-500">engagement</div>
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Legend */}
-          <div className="flex items-center justify-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-blue-300 rounded"></div>
-              <span className="text-gray-600">Views</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <span className="text-gray-600">Engagement</span>
-            </div>
-          </div>
-
           {/* Summary Stats */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
             <div className="text-center">
               <p className="text-lg font-bold text-gray-900">
-                {totalViews >= 1000000 ? `${(totalViews / 1000000).toFixed(1)}M` : 
-                 totalViews >= 1000 ? `${(totalViews / 1000).toFixed(1)}K` : 
-                 totalViews.toString()}
+                {formatNumber(topPerformers.reduce((sum, v) => sum + v.views, 0))}
               </p>
               <p className="text-sm text-gray-600">Total Views</p>
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold text-purple-600">{avgEngagement.toFixed(1)}%</p>
+              <p className="text-lg font-bold text-purple-600">
+                {(topPerformers.reduce((sum, v) => sum + v.engagement, 0) / topPerformers.length).toFixed(1)}%
+              </p>
               <p className="text-sm text-gray-600">Avg Engagement</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-green-600">
+                {formatNumber(topPerformers.reduce((sum, v) => sum + v.likes, 0))}
+              </p>
+              <p className="text-sm text-gray-600">Total Likes</p>
             </div>
           </div>
         </div>
