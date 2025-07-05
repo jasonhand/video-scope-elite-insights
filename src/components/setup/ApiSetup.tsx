@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Play, Key, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { Play, Key, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface ApiSetupProps {
   onConnect: () => void;
@@ -136,15 +136,11 @@ const ApiSetup = ({ onConnect }: ApiSetupProps) => {
               </Button>
             </div>
 
-            {/* Help Link */}
+            {/* Help Text */}
             <div className="text-center pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600 mb-2">
-                Need help getting your API key?
+              <p className="text-sm text-gray-600">
+                Get your free YouTube Data API v3 key from Google Cloud Console to connect your analytics data.
               </p>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                YouTube API Setup Guide
-              </Button>
             </div>
 
             {/* Free Tier Badge */}

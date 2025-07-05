@@ -7,51 +7,55 @@ const VideoGrid = () => {
   const videos = [
     {
       id: 1,
-      title: "Ultimate React Performance Guide 2024",
-      thumbnail: "/api/placeholder/320/180",
-      views: "125K",
-      likes: "3.2K",
-      comments: "187",
-      duration: "12:34",
-      publishedDays: 3,
+      title: "Building a Modern React Dashboard with TypeScript",
+      url: "https://youtu.be/qCW1n79Thgo?si=wQAZaqxJ7QgIEPZE",
+      thumbnail: `https://img.youtube.com/vi/qCW1n79Thgo/maxresdefault.jpg`,
+      views: "85.2K",
+      likes: "2.8K",
+      comments: "142",
+      duration: "16:42",
+      publishedDays: 5,
       performance: "excellent",
-      engagement: 4.8,
+      engagement: 4.9,
     },
     {
       id: 2,
-      title: "Building Modern Dashboards with Next.js",
-      thumbnail: "/api/placeholder/320/180",
-      views: "89K",
-      likes: "2.1K",
-      comments: "94",
-      duration: "15:22",
-      publishedDays: 7,
-      performance: "good",
-      engagement: 3.9,
+      title: "Advanced React Hooks and State Management",
+      url: "https://youtu.be/QYTe2BBhN1c?si=ad0U74XxX1b0-Ilo",
+      thumbnail: `https://img.youtube.com/vi/QYTe2BBhN1c/maxresdefault.jpg`,
+      views: "127K",
+      likes: "3.4K",
+      comments: "218",
+      duration: "22:15",
+      publishedDays: 12,
+      performance: "excellent",
+      engagement: 5.1,
     },
     {
       id: 3,
-      title: "TypeScript Tips Every Developer Should Know",
-      thumbnail: "/api/placeholder/320/180",
-      views: "67K",
-      likes: "1.8K",
-      comments: "156",
-      duration: "8:45",
-      publishedDays: 12,
+      title: "Next.js 14 App Router Complete Guide",
+      url: "https://youtu.be/qgTu6hv6Hys?si=BXduNRB9KnuJMEUR",
+      thumbnail: `https://img.youtube.com/vi/qgTu6hv6Hys/maxresdefault.jpg`,
+      views: "94.7K",
+      likes: "2.1K",
+      comments: "167",
+      duration: "19:33",
+      publishedDays: 8,
       performance: "good",
-      engagement: 4.1,
+      engagement: 4.2,
     },
     {
       id: 4,
-      title: "CSS Grid vs Flexbox: Complete Comparison",
-      thumbnail: "/api/placeholder/320/180",
-      views: "234K",
-      likes: "5.7K",
-      comments: "312",
-      duration: "18:56",
-      publishedDays: 18,
+      title: "Tailwind CSS Pro Tips and Advanced Techniques",
+      url: "https://youtu.be/ciLO96MDFbE?si=uL5DW5MBJ69PWhc8",
+      thumbnail: `https://img.youtube.com/vi/ciLO96MDFbE/maxresdefault.jpg`,
+      views: "156K",
+      likes: "4.2K",
+      comments: "289",
+      duration: "14:28",
+      publishedDays: 3,
       performance: "excellent",
-      engagement: 5.2,
+      engagement: 5.3,
     },
   ];
 
@@ -81,9 +85,26 @@ const VideoGrid = () => {
             <div key={video.id} className="group bg-white/40 rounded-lg p-4 hover:bg-white/60 transition-all duration-300 hover:shadow-md">
               {/* Video Thumbnail */}
               <div className="relative mb-4">
-                <div className="aspect-video bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
-                  <Play className="h-12 w-12 text-gray-500 group-hover:text-gray-700 transition-colors" />
-                </div>
+                <a href={video.url} target="_blank" rel="noopener noreferrer" className="block">
+                  <div className="aspect-video bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden relative">
+                    <img 
+                      src={video.thumbnail} 
+                      alt={video.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
+                      <Play className="h-12 w-12 text-gray-500 group-hover:text-gray-700 transition-colors" />
+                    </div>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <Play className="h-12 w-12 text-white/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                </a>
                 <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                   {video.duration}
                 </div>
@@ -94,9 +115,11 @@ const VideoGrid = () => {
 
               {/* Video Info */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {video.title}
-                </h3>
+                <a href={video.url} target="_blank" rel="noopener noreferrer">
+                  <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                    {video.title}
+                  </h3>
+                </a>
                 
                 {/* Metrics Row */}
                 <div className="flex items-center justify-between text-sm text-gray-600">
