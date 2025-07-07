@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: [https://lovable.dev/projects/46a3c4ad-e9ac-42fb-a766-220d4dc39d22](https://video-scope-elite-insights.lovable.app/)
+**URL**: [https://video-scope-elite-insights.lovable.app/]
 
 ## How can I edit this code?
 
